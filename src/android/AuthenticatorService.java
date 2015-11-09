@@ -3,7 +3,7 @@
 // This program is licensed under the 3-clause "Modified" BSD license,
 // see LICENSE file for full definition.
 
-package com.polychrom.cordova;
+package com.qt.cordova;
 
 import android.app.Service;
 import android.content.Intent;
