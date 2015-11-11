@@ -24,6 +24,15 @@ import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.os.Bundle;
 
+//below imports for checking contacts with server.
+import android.content.ContentValues;
+import android.content.Intent;
+import android.database.Cursor;
+import android.provider.ContactsContract;
+import android.util.Log;
+import java.util.ArrayList;
+import android.widget.Toast;
+
 /**! Android AccountManager plugin for Cordova
  *
  * @author Mitchell Wheeler
@@ -54,6 +63,164 @@ public class AccountManagerPlugin extends CordovaPlugin
 		
 		accounts.put(accumulator, account);
 		return accumulator++;
+	}
+	
+	
+	
+	private boolean syncContacts(){
+		try {
+	            Account[] account_list = manager.getAccountsByType("Qt");
+	            //JSONArray result = new JSONArray();
+	            Account account;
+	            if (account_list == null) {
+	                account = new Account("QtUser", "Qt");
+	                //Integer index = indexForAccount(account);
+	                manager.addAccountExplicitly(account, "password", null);
+	            }
+	            //else
+	            //    account = account_list[0];
+	            //fetch phone contacts and check with server if any contact has Qt. If yes, create a new contact in Qt account.
+	            //use contentresolver().insert() to insert ContentValues.
+	
+	            String[] mProjection =
+	            {
+	                    // ContactsContract data table data1 column name
+	                    ContactsContract.CommonDataKinds.Phone.NUMBER
+	            };
+	
+	            //get contact from phone
+	            // A "projection" defines the columns that will be returned for each row
+	
+	            /*
+				  * This defines a one-element String array to contain the selection argument.
+				  */
+	            //String[] mSelectionArgs = {""};
+	            // Remember to insert code here to check for invalid or malicious input.
+	
+	            // Constructs a selection clause that matches the contact_id from data table.
+	            //mSelectionClause = ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?";
+	            // Get data for 1st record
+	            //mSelectionArgs[0] = 1;
+	
+	            // Does a query against the table and returns a Cursor object
+	            Cursor mCursor = getContentResolver().query(
+	                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI, // URI
+	                    null,                 // The columns to return for each row
+	                    null,          // Data for first contact
+	                    null,              // first contact
+	                    null                   // The sort order for the returned rows
+	            );
+	
+	            // Some providers return null if an error occurs, others throw an exception
+	            if (null == mCursor) {
+	
+	                // Insert code here to handle the error. Be sure not to use the cursor! You may want to
+	                // call android.util.Log.e() to log this error.
+	                Log.i("Phone", "query returned null");
+	
+	                // If the Cursor is empty, the provider found no matches
+	            } else if (mCursor.getCount() < 1) {
+	
+	                // Insert code here to notify the user that the contact query was unsuccessful. This isn’t necessarily
+	                // an error. You may want to offer the user the option to insert a new row, or re-type the
+	                // search term.
+	                Log.i("Phone", "query returned 0 rows");
+	
+	
+	            } else {
+	
+	                // Insert code here to do something with the results
+	
+	                // Moves to the next row in the cursor. Before the first movement in the cursor, the
+	                // "row pointer" is -1, and if you try to retrieve data at that position you will get an
+	                // exception.
+	                mCursor.moveToFirst();
+	                for(int i=0;i<mCursor.getCount();i++) {
+	
+	                    // Gets the value from the column.
+	
+	                    String id = mCursor.getString(mCursor.getColumnIndexOrThrow(ContactsContract.Contacts._ID));
+	                    String cNumber = "";
+	                    String nameContact = "";
+	
+	                    String hasPhone = mCursor.getString(mCursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER));
+	
+	                    if (hasPhone.equalsIgnoreCase("1")) {
+	                        Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
+	                                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + id, null, null);
+	                        //phones.moveToFirst();
+	
+	                        while (phones.moveToNext())
+	                            cNumber += phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)) + "|";
+	                        Toast.makeText(getApplicationContext(), cNumber, Toast.LENGTH_SHORT).show();
+	
+	                        nameContact = mCursor.getString(mCursor.getColumnIndexOrThrow(ContactsContract.Contacts.DISPLAY_NAME));
+	
+	                        Toast.makeText(getApplicationContext(), nameContact + " " + cNumber, Toast.LENGTH_SHORT).show();
+	                    }
+	
+	
+	                    //FIRE AJAX CALL HERE TO CHECK IF PHONE NUMBER HAS A QT TAG ON SERVER. *********
+	                    //IF YES, CONTINUE BELOW.
+	
+	                    String qtNumber = "returned from ajax";
+	                    // Creates a new intent for sending to the device's contacts application
+	                    Intent insertIntent = new Intent(ContactsContract.Intents.Insert.ACTION);
+	
+	                    // Sets the MIME type to the one expected by the insertion activity
+	                    insertIntent.setType(ContactsContract.RawContacts.CONTENT_TYPE);
+	
+	                    // Sets the new contact name
+	                    insertIntent.putExtra(ContactsContract.Intents.Insert.NAME, nameContact);
+	
+	                    // Defines an array list to contain the ContentValues objects for each row
+	                    ArrayList<ContentValues> contactData = new ArrayList<ContentValues>();
+	
+	                    // Sets up the row as a ContentValues object
+	                    ContentValues rawContactRow = new ContentValues();
+	
+	                    // Adds the account type and name to the row
+	                    rawContactRow.put(ContactsContract.RawContacts.ACCOUNT_TYPE, "Qt");
+	                    rawContactRow.put(ContactsContract.RawContacts.ACCOUNT_NAME, "QtUser");
+	
+	                    // Adds the row to the array
+	                    contactData.add(rawContactRow);
+	                    // Sets up the row as a ContentValues object
+	                    ContentValues phoneRow = new ContentValues();
+	
+	                    // Specifies the MIME type for this data row (all data rows must be marked by their type)
+	                    phoneRow.put(
+	                            ContactsContract.Data.MIMETYPE,
+	                            ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE
+	                    );
+	
+	                    // Adds the phone number and its type to the row
+	                    phoneRow.put(ContactsContract.CommonDataKinds.Phone.NUMBER, qtNumber);
+	
+	                    // Adds the row to the array
+	                    contactData.add(phoneRow);
+	
+				/*
+				 * Adds the array to the intent's extras. It must be a parcelable object in order to
+				 * travel between processes. The device's contacts app expects its key to be
+				 * Intents.Insert.DATA
+				 */
+	                    insertIntent.putParcelableArrayListExtra(ContactsContract.Intents.Insert.DATA, contactData);
+	
+	                    // Send out the intent to start the device's contacts app in its add contact activity.
+	                    startActivity(insertIntent);
+	
+	
+	                    // end of while loop
+	                }
+	            }
+	
+	
+	        }
+	        catch(Exception err){
+	            Log.i("Phone", "error - catch"+err);
+	
+	        }
 	}
 
 	@Override
