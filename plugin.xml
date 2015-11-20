@@ -3,7 +3,7 @@
     xmlns:rim="http://www.blackberry.com/ns/widgets"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="com.qt.cordova.AccountManagerPlugin"
-    version="0.1.01">
+    version="0.1.02">
     <name>Account Manager</name>
     <description>An Android AccountManager plugin for Apache Cordova.</description>
     <license>Modified BSD</license>
@@ -44,6 +44,8 @@
 	</config-file>
 
 	<resource-file src="res/xml/authenticator.xml" target="res/xml/authenticator.xml" />
+	<resource-file src="res/drawable/qtblue.png" target="res/drawable/qtblue.png" />
+	<resource-file src="res/drawable/qtblueicon.png" target="res/drawable/qtblueicon.png" />
 
 	<source-file src="src/android/AccountManagerPlugin.java" target-dir="src/com/qt/cordova" />
 	<source-file src="src/android/Authenticator.java" target-dir="src/com/qt/cordova" />
