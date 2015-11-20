@@ -3,7 +3,7 @@
     xmlns:rim="http://www.blackberry.com/ns/widgets"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="com.qt.cordova.AccountManagerPlugin"
-    version="0.1.02">
+    version="0.1.03">
     <name>Account Manager</name>
     <description>An Android AccountManager plugin for Apache Cordova.</description>
     <license>Modified BSD</license>
